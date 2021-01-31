@@ -1,50 +1,40 @@
-var websocket = require('ws');
+var websocket = require("ws");
 
-var websocketServer = new websocket.Server({port:25500}, ()=>{
+var callbackInitServer = ()=>{
       console.log("Server is running");
-});
+}
+var websocketServer = new websocket.Server({port:25565}, callbackInitServer);
 
-var wsList = [];
+var websocketList = [];
 
-websocketServer.on("connection", (ws, rq)=>{
-    console.log('client connected.');
+websocketServer.on("connection",(ws,rq)=>{
+      console.log("Client Connected.");
+      websocketList.push(ws);
+         console.log(websocketList.length + " in Server");
 
-    wsList.push(ws);
+      ws.on("message",(data)=>{
+         console.log("send from client :" +data);
+         Boardcast(data);
+      });
 
-    ws.on("message", (data)=>{
-        console.log("send from client :"+data);
-        Boardcast(data);
-    });
-
-    ws.on("close", ()=>{
-        
-      // wsList = ArrayRemove(wsList, ws);
-
-        for(var i =0; i < wsList.length; i++)
-        {
-            if(wsList[i] == ws)
+      ws.on("close",()=>{
+         for(var i = 0; websocketList.length; i++)
+         {
+            if (websocketList[i] == ws)
             {
-                wsList.splice(i,1);
-                break;
+               websocketList.splice(i,1);
+               break;
             }
-        }
-        console.log("client disconnected.");
-        console.log(wsList.length);
-    });
+         }
+         console.log("client disconnected.");
+         console.log(websocketList.length + " in Server");
 });
-
-/*function ArrayRemove(arr, value)
-{
-  return arr.filter((element)=>{
-        return element != value;
-  })
-}*/
+});
 
 function Boardcast(data)
 {
-    for(var i = 0; i < wsList.length; i++)
-    {
-        wsList[i].send(data);
-    }
+   for (var i = 0; i < websocketList.length; i++)
+   {
+      websocketList[i].send(data);
+   }
 }
-
