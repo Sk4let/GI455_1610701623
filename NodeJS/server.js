@@ -5,43 +5,48 @@ var callbackInitServer = () => {
 }
 var websocketServer = new websocket.Server({ port: 9523 }, callbackInitServer);
 
-var clients = [];
-
+var clients = []; // Clients
+// Client connect to Server
 websocketServer.on("connection", (ws, rq) => {
-   clients.push(ws);
+   clients.push(ws); // Send Client to clients[]
 
    ws.on("message", (data) => {
-      //#register#I want my Id
-      var ext = data.split("#"); // ["","register","I want my Id"]
-      var id = ext[0]; // ""
-      var type = ext[1]; // register
-      var c_data = ext[2]; // I want my Id
+      //#checkfirst#Login as guest
+      var ext = data.split("#"); // split to ["","Checkfirst","Login as guest"]
+      var id = ext[0]; // "" Blank/
+      var type = ext[1]; // Checkfirst/
+      var msg_data = ext[2]; // Login as guest/
 
-      console.log(`ข้อมูลที่ Client ส่งเข้ามา`);
-      console.log(ext);
+      console.log("Client Send to Server");
+      console.log("DATA is " +ext);
+      console.log(" " +clients.length + "  in server");
 
-      // check type
+      // Check Type or ext[1]
       switch (type) {
-         case "register": // ส่งมาจาก Start()
-
-            // จัดเตรียมข้อมูล
+         case "register": // Send from Client at SendAction()
+            // Assign Data between "client_id" with client in clients[]
             ws["client_id"] = clients.length;
-            // ส่งข้อมูลไปที่ Client
-            ws.send(`${ws["client_id"]}#${type}#${"Register Completed"}`)
-            console.log(`ข้อมูลที่ Server ส่งให้ Client `);
-            console.log(`${ws["client_id"]}#${type}#${"Register Completed"}`)
+            // Send to Client/
+            // $ is string type but can assign values/
+            // # is symbol for split data
+
+            // After Assign new Data send data back to client
+            ws.send(`${ws["client_id"]}#${type}#${"Login Completed"}#${clients.length}`)
+            console.log("Server send data to client");
+            // EX. 1#register#Login Completed
+            console.log(`${ws["client_id"]}#${type}#${"Login Completed"}#${"In server " +clients.length}`)
             break;
             
-         case "message":
-            boardcast(`${id}#${type}#${c_data}`)
-            console.log(`${id}#${type}#${c_data}`);
+         case "message": // Send from Client at SendAction
+            boardcast(`${id}#${type}#${msg_data}`) //Send data to clients Ex. 
+            console.log(`DATA is ${id}#${type}#${msg_data}`);
             break;
          default:
             break;
       }
 
    });
-
+   // If client logout
    ws.on("close", () => {
       for (var i = 0; clients.length; i++) {
          if (clients[i] == ws) {
@@ -52,6 +57,7 @@ websocketServer.on("connection", (ws, rq) => {
    });
 });
 
+// send Data to clients
 function boardcast(data) {
    for (var i = 0; i < clients.length; i++) {
       clients[i].send(data);
