@@ -337,7 +337,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'In server :'
+  m_Text: 'Client ID :'
 --- !u!222 &161055861
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2222,7 +2222,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -121, y: -161}
+  m_AnchoredPosition: {x: -121, y: -379.7}
   m_SizeDelta: {x: 220.43872, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &722599892
@@ -4326,7 +4326,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 88.50003, y: -208}
+  m_AnchoredPosition: {x: 88.50003, y: -209}
   m_SizeDelta: {x: 414.31555, y: 95.108215}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1827885550
@@ -5051,7 +5051,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 55.070038, y: -161.3}
+  m_AnchoredPosition: {x: 55.070038, y: -380}
   m_SizeDelta: {x: 222.10663, y: 49.50261}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1942438613
