@@ -50,6 +50,7 @@ namespace BoardCast
 
       public void FixedUpdate()
       {
+         //listText.text = list;
          //If my message has updated.
          if (myMessages.Count > 0)
          {
@@ -99,6 +100,7 @@ namespace BoardCast
       {
          // Split data TO id#type#data ex. 1#register#Login as guest
          string[] ext = e.Data.Split('#');
+         //list = ext[3];
          // Array after split data
          //after split data in array are [{1},{register},{Login as guest}]
          //ext[0] = id , ext[1] = type , ext[2] = data
