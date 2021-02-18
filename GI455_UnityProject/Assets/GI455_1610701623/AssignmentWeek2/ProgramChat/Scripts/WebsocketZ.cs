@@ -16,9 +16,22 @@ namespace ChatWebsocket
            public string message;
        }
 
+       struct SocketEvent
+       {
+           public string eventName;
+           public string data;
+
+           public SocketEvent(string eventName, string data)
+           {
+               this.eventName = eventName;
+               this.data = data;
+           }
+       }
+
        public GameObject loginPanel;
        public GameObject chatPanel;
        public GameObject emotionPanel;
+       public GameObject lobbyPanel;
 
        public InputField ipInput;
        public InputField portInput;
@@ -30,7 +43,11 @@ namespace ChatWebsocket
        public InputField inputUsername;
        private WebSocket webSocket;
 
+       public InputField CreateRoomName;
+       public InputField JoinRoomName;
+
        private string tempMessageString;
+       private string tempCreateString;
 
        bool isEmotionOpen = false;
        public Text nickname;
@@ -61,18 +78,21 @@ namespace ChatWebsocket
 
                tempMessageString = "";
            }
+           
+
        }
 
        public void Connect() 
        {
-           if (ipInput.text == "127.0.0.1" && portInput.text == "9523")
+           if (ipInput.text == "" && portInput.text == "")
            {
                 webSocket = new WebSocket($"ws://127.0.0.1:9523/");
                 webSocket.OnMessage += OnMessage;
                 webSocket.Connect();
 
                 loginPanel.gameObject.SetActive(false);
-                chatPanel.gameObject.SetActive(true);
+                //chatPanel.gameObject.SetActive(true);
+                lobbyPanel.gameObject.SetActive(true);
 
                 if (string.IsNullOrEmpty(inputUsername.text))
                 {
@@ -113,6 +133,8 @@ namespace ChatWebsocket
                 webSocket.Close();
             }
        }
+
+       
       public void Disconnect()
       {
          if (webSocket != null)
@@ -130,7 +152,27 @@ namespace ChatWebsocket
 
        private void OnMessage(object sender, MessageEventArgs messageEventArgs)
        {
-           tempMessageString = messageEventArgs.Data;
+           Debug.Log(messageEventArgs.Data);
+
+           //tempMessageString = messageEventArgs.Data;
+       }
+
+       public void CreateRoom(string roomName)
+       {
+           if(webSocket.ReadyState == WebSocketState.Open)
+           {
+               roomName = CreateRoomName.text;
+               SocketEvent socketEvent = new SocketEvent("CreateRoom", roomName);
+
+                string jsonStr = JsonUtility.ToJson(socketEvent);
+
+               webSocket.Send(jsonStr);
+
+               
+
+           }
+
+
        }
 
         public void OnOpenEmotion()
