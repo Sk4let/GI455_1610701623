@@ -122,7 +122,14 @@ websocketServer.on("connection", (ws, rq) => {
             }
             else 
             {
-               console.log("NOT FOUND ROOM")
+               var resultData = {
+                  eventName: toJson.eventName,
+                  data: "CANNOT JOIN"
+               }
+
+               var toJsonStr = JSON.stringify(resultData)
+
+               ws.send(toJsonStr);
             }
 
          }
@@ -196,7 +203,9 @@ websocketServer.on("connection", (ws, rq) => {
 
 // send Data to clients
 function Boardcast(data) {
-   for (var i = 0; i < clients.length; i++) {
+
+   for ( var i = 0 ; i < clients.length; i++)
+   {
       clients[i].send(data);
    }
 }

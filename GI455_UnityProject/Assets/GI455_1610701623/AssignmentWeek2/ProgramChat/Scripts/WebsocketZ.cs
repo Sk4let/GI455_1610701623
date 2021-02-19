@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -49,6 +49,10 @@ namespace ChatWebsocket
 
        private string tempMessageString;
        private string tempCreateString;
+
+       [Header("POPUP")]
+       public GameObject joinpopup;
+       public GameObject createpopup;
 
        bool isEmotionOpen = false;
        public Text nickname;
@@ -125,6 +129,7 @@ namespace ChatWebsocket
             string toJsonStr = JsonUtility.ToJson(messageData);
 
             webSocket.Send(toJsonStr);
+            
             inputText.text = "";
        }
 
@@ -168,9 +173,12 @@ namespace ChatWebsocket
                         lobbyPanel.gameObject.SetActive(false);
                         roomName.text = RoomNameInputfield.text;
                     }
-                    else 
+                    else
                     {
-                        Debug.Log("Create Failed");
+                        if (socketEvent.data == "fail")
+                        {
+                        createpopup.gameObject.SetActive(true);
+                        }
                     }
                     break;
 
@@ -183,9 +191,13 @@ namespace ChatWebsocket
                         roomName.text = RoomNameInputfield.text;
                         Debug.Log("joined");
                     }
-                    else 
+                    else
                     {
-                        Debug.Log(" Join Failed");
+                        if (socketEvent.data == "CANNOT JOIN")
+                        {
+                            joinpopup.gameObject.SetActive(true);
+                        }
+                        
                     }
                     break;
            }
