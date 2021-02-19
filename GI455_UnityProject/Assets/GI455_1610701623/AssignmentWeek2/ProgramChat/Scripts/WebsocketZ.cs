@@ -32,9 +32,11 @@ namespace ChatWebsocket
        public GameObject chatPanel;
        public GameObject emotionPanel;
        public GameObject lobbyPanel;
+       public Transform chatContent;
 
        public InputField ipInput;
        public InputField portInput;
+       public Text roomName;
        public Text sendText;
        public Text receiveText;
        public TextMesh agentnickname;
@@ -43,8 +45,7 @@ namespace ChatWebsocket
        public InputField inputUsername;
        private WebSocket webSocket;
 
-       public InputField CreateRoomName;
-       public InputField JoinRoomName;
+       public InputField RoomNameInputfield;
 
        private string tempMessageString;
        private string tempCreateString;
@@ -66,14 +67,15 @@ namespace ChatWebsocket
                if (receiveMessageData.username == nickname.text)
                {
                    sendText.text += "<color=red>" + receiveMessageData.username +  "</color> : " + receiveMessageData.message + "\n";
-                   receiveText.text += "\n";
-                   receiveText.text += "\n";
-               }
-               else 
-               {
                    sendText.text += "\n";
                    receiveText.text += "\n";
-                   receiveText.text += "<color=blue>" + receiveMessageData.username + "</color> : "  + receiveMessageData.message + "\n";
+
+               }
+               else
+               {
+                   receiveText.text += "<color=blue>" + receiveMessageData.username +  "</color> : " + receiveMessageData.message + "\n";
+                   sendText.text += "\n";
+                   receiveText.text += "\n";
                }
 
                tempMessageString = "";
@@ -145,30 +147,88 @@ namespace ChatWebsocket
          chatPanel.gameObject.SetActive(false);
          loginPanel.gameObject.SetActive(true);
 
-         sendText.text = string.Empty;
-         receiveText.text = string.Empty;
+         //sendText.text = string.Empty;
+         //receiveText.text = string.Empty;
 
       }
 
-       private void OnMessage(object sender, MessageEventArgs messageEventArgs)
+       private void OnMessage(object sender, MessageEventArgs e)
        {
-           Debug.Log(messageEventArgs.Data);
+           var socketEvent = JsonUtility.FromJson<SocketEvent>(e.Data);
 
-           //tempMessageString = messageEventArgs.Data;
+           Debug.Log(socketEvent.data);
+
+           switch (socketEvent.eventName)
+           {
+               case "CreateRoom":
+
+                    if (socketEvent.data == "Create Success")
+                    {
+                        chatPanel.gameObject.SetActive(true);
+                        lobbyPanel.gameObject.SetActive(false);
+                        roomName.text = RoomNameInputfield.text;
+                    }
+                    else 
+                    {
+                        Debug.Log("Create Failed");
+                    }
+                    break;
+
+               case "JoinRoom":
+
+                    if (socketEvent.data == "JOIN")
+                    {
+                        chatPanel.gameObject.SetActive(true);
+                        lobbyPanel.gameObject.SetActive(false);
+                        roomName.text = RoomNameInputfield.text;
+                        Debug.Log("joined");
+                    }
+                    else 
+                    {
+                        Debug.Log(" Join Failed");
+                    }
+                    break;
+           }
+
+           Debug.Log(socketEvent.data);
+
+           tempMessageString = e.Data;
        }
 
-       public void CreateRoom(string roomName)
+       public void CreateRoom()
        {
            if(webSocket.ReadyState == WebSocketState.Open)
            {
-               roomName = CreateRoomName.text;
-               SocketEvent socketEvent = new SocketEvent("CreateRoom", roomName);
+               var message = new SocketEvent()
+               {
+                   eventName = "CreateRoom",
+                   data = RoomNameInputfield.text
 
-                string jsonStr = JsonUtility.ToJson(socketEvent);
+               };
 
-               webSocket.Send(jsonStr);
+               var tojsonStr = JsonUtility.ToJson(message);
 
-               
+               webSocket.Send(tojsonStr);
+
+           }
+
+
+       }
+
+       public void JoinRoom()
+       {
+           if(webSocket.ReadyState == WebSocketState.Open)
+           {
+               var message = new SocketEvent()
+               {
+                   eventName = "JoinRoom",
+                   data = RoomNameInputfield.text
+
+               };
+
+               var tojsonStr = JsonUtility.ToJson(message);
+
+               webSocket.Send(tojsonStr);
 
            }
 

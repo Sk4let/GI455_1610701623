@@ -28,6 +28,8 @@ websocketServer.on("connection", (ws, rq) => {
 
          var toJson = JSON.parse(data);
 
+         Boardcast(data);
+
          //console.log(toJson.eventName);
 
          //CreateRoom
@@ -75,7 +77,7 @@ websocketServer.on("connection", (ws, rq) => {
 
                var resultData = {
                   eventName: toJson.eventName,
-                  data: "success"
+                  data: "Create Success"
                }
 
                var toJsonStr = JSON.stringify(resultData)
@@ -86,7 +88,43 @@ websocketServer.on("connection", (ws, rq) => {
          }
          else if(toJson.eventName == "JoinRoom")//JoinROom
          {
-            console.log("client request JoinRoom");
+            var isClientFoundRoom = false;
+            for(var i=0;i < roomList.length; i++)
+            {
+               if(roomList[i].roomName == toJson.data)
+               {
+                  isClientFoundRoom = true;
+                  break;
+               }
+
+            }
+
+            if(isClientFoundRoom)
+            {
+               var JoinData = {
+                  roomName: toJson.data,
+                  clients: []
+               }
+
+               roomList.push(JoinData);
+
+               console.log("Found Room");
+               console.log(roomList.length);
+
+               var resultData = {
+                  eventName: toJson.eventName,
+                  data: "JOIN"
+               }
+
+               var toJsonStr = JSON.stringify(resultData)
+
+               ws.send(toJsonStr);
+            }
+            else 
+            {
+               console.log("NOT FOUND ROOM")
+            }
+
          }
          else if(toJson.eventName == "LeaveRoom")
          {
@@ -151,6 +189,8 @@ websocketServer.on("connection", (ws, rq) => {
              }
           }
        }
+
+       console.log(roomList.length);
    });
 });
 
