@@ -1,4 +1,12 @@
 var websocket = require("ws");
+const sqlite = require('sqlite3').verbose();
+
+var db = new sqlite.Database('./db/chatDB.db', sqlite.OPEN_CREATE | sqlite.OPEN_READWRITE, (err) => {
+
+   if (err) throw err;
+
+   console.log("Connected to database");
+});
 
 var callbackInitServer = () => {
    console.log("Server is running at port 9523");
@@ -8,132 +16,189 @@ var websocketServer = new websocket.Server({ port: 9523 }, callbackInitServer);
 var clients = []; // Clients
 var roomList = []; // Rooms
 
-/*
-{
-   roomName: "xxxxxxxx",
-   clients: []
-}
-*/
+// roomList = {
+//   roomName: "xx",
+//   clients: []
+//}
 
 
 // Client connect to Server
 websocketServer.on("connection", (ws, rq) => {
+   console.log("==============================[ Client Connecting . . . ]====================================");
+   clients.push(ws); // Send Client to clients[]
 
    {
-      //LobbyZone
-
       ws.on("message", (data) => {
 
-         console.log(data);
-
-         var toJson = JSON.parse(data);
 
          Boardcast(data);
 
-         //console.log(toJson.eventName);
+         var toJsonObj = JSON.parse(data);
 
-         //CreateRoom
-         if (toJson.eventName == "CreateRoom")
+         var jsonObj = {
+            eventName: toJsonObj.eventName,
+            data: toJsonObj.data
+         }
+
+         console.log(jsonObj);
+
+         var splitStr = jsonObj.data.split("#");
+         console.log(splitStr);
+         var userID = splitStr[0];
+         var password = splitStr[1];
+         var name = splitStr[2];
+
+         var sqlSelect = "SELECT * FROM UserData WHERE UserID='"+userID+"' AND Password='"+password+"'"; //Login
+         var sqlInsert = "INSERT INTO UserData (UserID, Password, Name) VALUES ('"+userID+"', '"+password+"', '"+name+"')" //Register
+
+
+         //Register
+         if( jsonObj.eventName == "Register")
+         {
+            db.all(sqlInsert, (err,rows)=>{
+               if(err) 
+               {
+                  var callbackMsg = {
+                     eventName:"Register",
+                     data:"fail" + "#" + "User already in use"
+                  }
+                  var toJson = JSON.stringify(callbackMsg)
+                  ws.send(toJson);
+               }
+               else 
+               {
+                  var callbackMsg = {
+                     eventName:"Register",
+                     data:"success" + "#" + "Register Success"
+                  }
+                  var toJson = JSON.stringify(callbackMsg)
+                  ws.send(toJson);
+               }
+               
+            });
+         }
+         else if (jsonObj.eventName == "Login")
+         {
+            db.all(sqlSelect, (err,rows)=>{
+               if(err)
+               {
+                  var callbackMsg = {
+                     eventName:"Login",
+                     data:"fail"
+                  }
+                  var toJson = JSON.stringify(callbackMsg)
+                  ws.send(toJson);
+               }
+               else 
+               {
+                  if (rows.length > 0)
+                  {
+                     console.log(rows);
+                     var callbackMsg = {
+                        eventName:"Login",
+                        data:"success" + "#" + rows[0].Name
+                     }
+                     var toJson = JSON.stringify(callbackMsg)
+                     ws.send(toJson);
+                  }
+                  else if (rows.length <= 0)
+                  {
+                     var callbackMsg = {
+                        eventName:"Login",
+                        data:"fail" + "#" + "not found"
+                     }
+                     var toJson = JSON.stringify(callbackMsg)
+                     ws.send(toJson);
+                  }
+                 
+               }
+
+            });
+
+            console.log("Clients Count : " + clients.length)
+
+         }
+         else if (jsonObj.eventName == "CreateRoom")
          {
             var isFoundRoom = false;
-            for(var i=0;i < roomList.length; i++)
+            for ( var i = 0; i < roomList.length; i++)
             {
-               if(roomList[i].roomName == toJson.data)
+               if(roomList[i].roomName == jsonObj.data)
                {
                   isFoundRoom = true;
                   break;
                }
-
             }
-
-            if(isFoundRoom)
+            if (isFoundRoom == true)
             {
-               //Callback to client : roomName is exist.
-               console.log("Create room : room is found");
-
-               var resultData = {
-                  eventName: toJson.eventName,
-                  data: "fail"
+               var callbackMsg = {
+                  eventName:"CreateRoom",
+                  data: "fail" + "#" + "room already exist"
                }
-
-               var toJsonStr = JSON.stringify(resultData)
-
-               ws.send(toJsonStr);
+               var toJson = JSON.stringify(callbackMsg)
+               ws.send(toJson);
             }
             else 
             {
-               //Create room here.
-               console.log("Create room : room is not found");
-
                var newRoom = {
-                  roomName : toJson.data,
+                  roomName: jsonObj.data,
                   clients: []
                }
 
                roomList.push(newRoom);
+               roomList[i].clients.push(ws);
 
-               newRoom.clients.push(ws);
 
-
-               var resultData = {
-                  eventName: toJson.eventName,
-                  data: "Create Success"
+               var callbackMsg = {
+                  eventName:"CreateRoom",
+                  data: "success" + "#" + jsonObj.data
                }
-
-               var toJsonStr = JSON.stringify(resultData)
-
-               ws.send(toJsonStr);
-
+               var toJson = JSON.stringify(callbackMsg)
+               ws.send(toJson);
             }
+
          }
-         else if(toJson.eventName == "JoinRoom")//JoinROom
+         else if (jsonObj.eventName == "JoinRoom")
          {
             var isClientFoundRoom = false;
-            for(var i=0;i < roomList.length; i++)
+            for(var i = 0; i < roomList.length; i++)
             {
-               if(roomList[i].roomName == toJson.data)
+               if(roomList[i].roomName == jsonObj.data)
                {
                   isClientFoundRoom = true;
-                  break;
+                  break
                }
-
             }
 
             if(isClientFoundRoom)
             {
                var JoinData = {
-                  roomName: toJson.data,
+                  roomName: jsonObj.data,
                   clients: []
                }
 
                roomList.push(JoinData);
 
-               console.log("Found Room");
-               console.log(roomList.length);
-
-               var resultData = {
-                  eventName: toJson.eventName,
-                  data: "JOIN"
+               var callbackMsg = {
+                  eventName:"JoinRoom",
+                  data: "success" + "#" +jsonObj.data
                }
+               var toJson = JSON.stringify(callbackMsg)
+               ws.send(toJson);
 
-               var toJsonStr = JSON.stringify(resultData)
-
-               ws.send(toJsonStr);
             }
             else 
             {
-               var resultData = {
-                  eventName: toJson.eventName,
-                  data: "CANNOT JOIN"
+               var callbackMsg = {
+                  eventName:"JoinRoom",
+                  data: "fail" + "#" + "Cannot join room"
                }
+               var toJson = JSON.stringify(callbackMsg)
+               ws.send(toJson);
 
-               var toJsonStr = JSON.stringify(resultData)
-
-               ws.send(toJsonStr);
             }
-
          }
-         else if(toJson.eventName == "LeaveRoom")
+         else if(jsonObj.eventName == "LeaveRoom")
          {
             var isLeaveSuccess = false;
 
@@ -157,23 +222,38 @@ websocketServer.on("connection", (ws, rq) => {
 
             if(isLeaveSuccess)
             {
-               ws.send("LeaveRoomSuccess");
-
-               console.log("leave room success");
+               var callbackMsg = {
+                  eventName:"LeaveRoom",
+                  data: "success" + "#" + "leave room success"
+               }
+               var toJson = JSON.stringify(callbackMsg)
+               ws.send(toJson);
             }
             else 
             {
-               ws.send("LeaveRoomFail");
-
-               console.log("leave room fail");
+               var callbackMsg = {
+                  eventName:"LeaveRoom",
+                  data: "fail" + "#" + "cannot leave room"
+               }
+               var toJson = JSON.stringify(callbackMsg)
+               ws.send(toJson);
             }
-         }
-      });
 
+          
+         }
+         else if(jsonObj.eventName == "Message")
+         {
+            var callbackMsg = {
+               eventName:"Message",
+               data: splitStr[0] + "#" + splitStr[1] + "#" + splitStr[2] + "#" + splitStr[3]
+            }
+            var toJson = JSON.stringify(callbackMsg)
+            ws.send(toJson);
+         }
+         
+      });
    }
 
-   console.log("client connected.");
-   clients.push(ws); // Send Client to clients[]
 
    // If client logout
    ws.on("close", () => {
@@ -196,8 +276,6 @@ websocketServer.on("connection", (ws, rq) => {
              }
           }
        }
-
-       console.log(roomList.length);
    });
 });
 

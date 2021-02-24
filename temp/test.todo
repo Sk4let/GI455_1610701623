@@ -1,0 +1,11 @@
+Client:
+    ✔ Create Room @done(21-02-20 00:33)
+    ✔ Join Room @done(21-02-20 00:50)
+    ✔ Leave Room @done(21-02-20 00:55)
+    ✔ Send Message @done(21-02-20 00:57)
+
+Socket:
+   ☐ connection
+       ☐ open
+       ☐ message
+       ☐ close
