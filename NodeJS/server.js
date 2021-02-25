@@ -16,6 +16,7 @@ var websocketServer = new websocket.Server({ port: 9523 }, callbackInitServer);
 var clients = []; // Clients
 var roomList = []; // Rooms
 
+
 // roomList = {
 //   roomName: "xx",
 //   clients: []
@@ -29,9 +30,6 @@ websocketServer.on("connection", (ws, rq) => {
 
    {
       ws.on("message", (data) => {
-
-
-         Boardcast(data);
 
          var toJsonObj = JSON.parse(data);
 
@@ -142,11 +140,10 @@ websocketServer.on("connection", (ws, rq) => {
             {
                var newRoom = {
                   roomName: jsonObj.data,
-                  clients: []
+                  clients: [ws]
                }
 
                roomList.push(newRoom);
-               roomList[i].clients.push(ws);
 
 
                var callbackMsg = {
@@ -160,47 +157,35 @@ websocketServer.on("connection", (ws, rq) => {
          }
          else if (jsonObj.eventName == "JoinRoom")
          {
-            var isClientFoundRoom = false;
             for(var i = 0; i < roomList.length; i++)
             {
                if(roomList[i].roomName == jsonObj.data)
                {
-                  isClientFoundRoom = true;
-                  break
+                  roomList[i].clients.push(ws);
+
+                  var callbackMsg = {
+                     eventName:"JoinRoom",
+                     data: "success" + "#" + jsonObj.data
+                  
+                  }
+                  console.log(jsonObj.data);
+                  var toJson = JSON.stringify(callbackMsg)
+                  ws.send(toJson);
+                  break;
                }
-            }
-
-            if(isClientFoundRoom)
-            {
-               var JoinData = {
-                  roomName: jsonObj.data,
-                  clients: []
+               else 
+               {
+                  var callbackMsg = {
+                     eventName:"JoinRoom",
+                     data: "fail" + "#" + "Cannot join room"
+                  }
+                  var toJson = JSON.stringify(callbackMsg)
+                  ws.send(toJson);
                }
-
-               roomList.push(JoinData);
-
-               var callbackMsg = {
-                  eventName:"JoinRoom",
-                  data: "success" + "#" +jsonObj.data
-               }
-               var toJson = JSON.stringify(callbackMsg)
-               ws.send(toJson);
-
-            }
-            else 
-            {
-               var callbackMsg = {
-                  eventName:"JoinRoom",
-                  data: "fail" + "#" + "Cannot join room"
-               }
-               var toJson = JSON.stringify(callbackMsg)
-               ws.send(toJson);
-
             }
          }
          else if(jsonObj.eventName == "LeaveRoom")
          {
-            var isLeaveSuccess = false;
 
             for (var i = 0; i < roomList.length; i++)
             {
@@ -210,45 +195,54 @@ websocketServer.on("connection", (ws, rq) => {
                   {
                      roomList[i].clients.splice(j, 1);
 
+                     var callbackMsg = {
+                        eventName:"LeaveRoom",
+                        data: "success" + "#" + splitStr[1]
+                     }
+                     var toJson = JSON.stringify(callbackMsg)
+                     ws.send(toJson);
+
                      if (roomList[i].clients.length <= 0)
                      {
                         roomList.splice(i, 1);
                      }
-                     isLeaveSuccess = true;
+
                      break;
+                  }
+                  else 
+                  {
+                     var callbackMsg = {
+                        eventName:"LeaveRoom",
+                        data: "fail" + "#" + "cannot leave room"
+                     }
+                     var toJson = JSON.stringify(callbackMsg)
+                     ws.send(toJson);
                   }
                }
             }
-
-            if(isLeaveSuccess)
-            {
-               var callbackMsg = {
-                  eventName:"LeaveRoom",
-                  data: "success" + "#" + "leave room success"
-               }
-               var toJson = JSON.stringify(callbackMsg)
-               ws.send(toJson);
-            }
-            else 
-            {
-               var callbackMsg = {
-                  eventName:"LeaveRoom",
-                  data: "fail" + "#" + "cannot leave room"
-               }
-               var toJson = JSON.stringify(callbackMsg)
-               ws.send(toJson);
-            }
-
-          
+         
          }
          else if(jsonObj.eventName == "Message")
          {
-            var callbackMsg = {
-               eventName:"Message",
-               data: splitStr[0] + "#" + splitStr[1] + "#" + splitStr[2] + "#" + splitStr[3]
+            for ( var i = 0 ; i < roomList.length; i++)
+            {
+               if (roomList[i].roomName == splitStr[1])
+               {
+                  for (var j = 0; j < roomList[i].clients.length; j++)
+                  {
+                     if (roomList[i].clients[j] != ws)
+                     {
+                        var callbackMsg = {
+                           eventName:"Message",
+                           data: splitStr[0] + "#" + splitStr[1] + "#" + splitStr[2] + "#" + splitStr[3] // UserID , roomName , Message , name
+                        }
+                        var toJson = JSON.stringify(callbackMsg);
+                        roomList[i].clients[j].send(toJson);
+                    }
+                  }
+               }
+               
             }
-            var toJson = JSON.stringify(callbackMsg)
-            ws.send(toJson);
          }
          
       });

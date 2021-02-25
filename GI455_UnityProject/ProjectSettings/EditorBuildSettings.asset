@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/GI455_1610701623/AssignmentWeek2/ProgramChat/Scenes/LoginScene.unity
+    path: Assets/GI455_1610701623/AssignmentWeek2-5/ProgramChat/Scenes/LoginScene.unity
     guid: b0c90759dcf99eb43b38abc54f9570e5
   m_configObjects: {}
