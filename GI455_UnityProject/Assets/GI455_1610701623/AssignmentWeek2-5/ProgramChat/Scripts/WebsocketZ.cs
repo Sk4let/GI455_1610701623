@@ -212,10 +212,14 @@ namespace ChatWebsocket
                if(status == "success")
                {
                   regSuccessPopup.gameObject.SetActive(true);
+                  regUserID.text = string.Empty;
+                  regName.text = string.Empty;
+                  regPassword.text = string.Empty;
+                  regRepassword.text = string.Empty;
                }
                else if (status == "fail")
                {
-                  regerrorPopup.gameObject.SetActive(false);
+                  regerrorPopup.gameObject.SetActive(true);
                } 
 
                break;
